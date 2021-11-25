@@ -11,26 +11,32 @@ environment_name = "CartPole-v0"
 
 class CartPoleModel:
 
-    def __init__(self, log_path=None, ppo_path=None):
-        if log_path is None:
-            log_path = os.path.join("Trainings", "Logs")
-        if ppo_path is None:
-            ppo_path = os.path.join("Trainings", "Saved_Models", "PPO_CartPole_Model")
+    def __init__(self, log_path: str = None, ppo_path: str = None, re_train=False):
+        self.log_path = os.path.join("Trainings", "Logs") if log_path is None else os.path.join("Trainings", log_path)
+
+        self.ppo_path = os.path.join("Trainings", "Saved_Models", "PPO_CartPole_Model") if ppo_path is None else \
+            os.path.join("Trainings", "Saved_Models", ppo_path)
 
         gym_env = gym.make(environment_name)
         self.env = DummyVecEnv([lambda: gym_env])
-        self.model = PPO("MlpPolicy", self.env, verbose=1, tensorboard_log=log_path)
 
-        if len(os.listdir("Trainings/Saved_Models")) == 0:
-            self.train_model(ppo_path)
+        self.algorithm = PPO("MlpPolicy", self.env, verbose=1, tensorboard_log=self.log_path)
 
-        self.loaded_model = self.model.load(ppo_path)
+        if (not os.listdir("Trainings/Saved_Models").__contains__(self.ppo_path.split("/").pop() + ".zip")) or re_train:
+            self.train_model(self.ppo_path)
 
-    def train_model(self, ppo_path):
-        self.model.learn(total_timesteps=20000)
-        self.model.save(ppo_path)
+        self.loaded_model = self.algorithm.load(self.ppo_path)
 
-        ev_policy = evaluate_policy(self.model, self.env, n_eval_episodes=10, render=True)
+    def train_model(self, ppo_path, callback=None, algo=None):
+
+        if algo is not None:
+            self.algorithm = algo
+
+        self.algorithm.learn(total_timesteps=20000, callback=callback)
+
+        self.algorithm.save(ppo_path)
+
+        ev_policy = evaluate_policy(self.algorithm, self.env, n_eval_episodes=10, render=True)
         print(f"Evaluated Policy: {ev_policy}")
 
     def run_model(self):
@@ -55,5 +61,6 @@ class CartPoleModel:
         self.env.reset()
 
 
-cartPole_model = CartPoleModel()
-cartPole_model.run_model()
+if __name__ == '__main__':
+    cartPole_model = CartPoleModel()
+    cartPole_model.run_model()
