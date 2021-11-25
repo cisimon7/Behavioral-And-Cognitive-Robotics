@@ -3,6 +3,7 @@ import time
 import numpy as np
 
 
+### Task 2
 class Network:
     def __init__(self, env, n_hidden):
         """
@@ -74,6 +75,7 @@ class Network:
                           f"\nmotors:\t\t {np.ravel(self.motor)}\n")
                 j += 1
 
+            env.close()
             n_fitness.append(fitness)
 
         return np.mean(n_fitness)
@@ -93,6 +95,7 @@ class Network:
         self.b2 = np.asarray(genotype[d1 + d2 + d3:d1 + d2 + d3 + d4]).reshape((m, 1))
 
 
+### Task 3
 class EvolutionStrategy:
     def __init__(self):
         self.pop_size = 10
